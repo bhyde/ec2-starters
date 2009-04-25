@@ -1,0 +1,60 @@
+#!/bin/bash
+. `dirname $0`/common-startup.sh
+
+usage(){
+cat <<EOF
+usage $0 <machine-type-or-user-data>
+
+  Emit command to spin up a new EC2 instance under the credentials
+  implied by your environment settings.  If
+  <machine-type-or-user-data> denotes a file in the userdata directory
+  that will be what we spin up.  Otherwise <machine-type-or-user-data>
+  should denote just machine type and the newest user data of that
+  type will be used.  In eithar case a machine type is infered and the
+  AMI and firewall group declared for that type in
+  config/machine-types will be used.  The instance's root account will
+  be blessed with the ssh key denoted by ssh_key_name in
+  config/ec2.config
+
+EOF
+exit 2
+}
+
+if [ $# -ne 1 ] ; then usage ; fi
+if [ "x$1" == "x-h" ] ; then usage ; fi
+if [ "x$1" == "x--help" ] ; then usage ; fi
+ARG=$1
+if echo $ARG | grep -q -e "-[0-9]*$" ; then
+  USERDATA="$ARG"
+  TYPE=`basename $ARG`
+  TYPE=`echo $TYPE | sed 's/-[0-9]*$//'`
+else
+  TYPE="$ARG"
+  USERDATA=`ls -t userdata/$1-* | head -1`
+fi
+
+AMI=unknown
+FIREWALL_GROUP=unknown
+HARDWARE=unknown
+# Get the name for our bundle
+snip(){
+    echo $1 | sed 's/.*://'
+}
+process_name(){
+    NAME=$1
+    grep --quiet "^$NAME " config/machine-types || ERROR "Unknown $NAME not found machine-types"
+    INFO=( `grep "^$NAME " config/machine-types` )
+    INFO=(${INFO[@]:1})
+    for part in ${INFO[@]} ; do
+        case $part in
+            include:*) process_name $part;;
+            ami:*) AMI=`snip $part`;;
+            hardware:*) HARDWARE=`snip $part`;;
+            firewall:*) FIREWALL_GROUP=`snip $part`;;
+            *)  ;;
+        esac
+    done
+}
+process_name $TYPE
+FIREWALL_GROUP=`echo $FIREWALL_GROUP | sed 's/,/ -g /g'`
+ec2-run-instances $AMI -g $FIREWALL_GROUP -t $HARDWARE -f $USERDATA -k `get-config ssh_key_name`

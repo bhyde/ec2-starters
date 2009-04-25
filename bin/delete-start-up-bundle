@@ -1,0 +1,37 @@
+#!/bin/bash
+. `dirname $0`/common-startup.sh
+
+usage(){
+    cat <<EOF
+Usage: $0 <user-data-file>
+
+  <user-data-file> should exist in the userdata directory,
+  It is removed as is the associated start-up bundle in
+  S3.
+
+EOF
+    exit 2
+}
+
+HERE=`pwd`
+
+# Exit if any simple commands exit with non-zero status
+set -e
+
+
+# Check that we are running in the right directory.
+[ -e $HERE/modules ] || ERROR "Must $0 run in the right place."
+
+# Get the name for our bundle
+USERDATA=$1
+if [ ! -e $USERDATA ] ; then
+  ERROR File not found: $USERDATA
+fi
+if [ `dirname $USERDATA` != userdata ] ; then
+  ERROR "Arg '$USERDATA' should denote the userdata file"
+fi
+BUNDLE=`basename $USERDATA`
+STORE=`get-config starters`/$BUNDLE
+LOG Removing $STORE, the start-up bundle on S3, and userdata
+s3cmd rm $STORE
+rm $USERDATA
