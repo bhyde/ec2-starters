@@ -1,0 +1,21 @@
+# Fill this out before any of this will work.
+
+# Our Amazon credentials  (note this is the EXAMPLE)
+ec2_id 18D5KBUEXAMPLEJ769JG52
+ec2_secret Ty7zk0QlXdng/EXAMPLEFkY0udS8uI6iIDVXlnS5
+cert-pem-file ../../creds/cert-KQDUIATBNWMCSOHYLJWVSN4VOEXAMPLE.pem
+pk-pem-file   ../../creds/pk-KQDUIATBNWMCSOHYLJWVSN4VOEXAMPLE.pem
+
+# The password ec2-starters uses to encrypt starter bundles
+password EXAMPLE
+
+# The S3 bucket we store the bundles
+starters :example/starters
+# That bucket appears here in URL space
+urlbase http://example.s3.amazonaws.com/starters
+
+# Our SSH's id with ec2, installed in root accounts
+ssh_key_name example_key
+
+# Where to search for the modules we assemble starter bundles
+modules_path modules example-app

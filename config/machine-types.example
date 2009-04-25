@@ -1,0 +1,28 @@
+## Declare our machine configurations.
+
+## Each line defines either machine type, or a building block
+## which we can include in other lines.
+
+## Each line is a name followed by other tokens.
+
+## The tokens look like:
+#  firewall:<name> -- name of an amazon firewall group.
+#  hardware:<name> -- name of an amazon machine type, for example m1.small
+#  include:<name>  -- recursively included.
+#  <name>          -- a machine type.
+
+
+#### Building blocks
+
+include:basic-modules  utilities bootstrap-apt erlang
+include:little-machine ami:ami-115db978 hardware:m1.small
+include:big-machine    ami:ami-055db96c hardware:m1.small
+include:java-10-cent   include:little-machine java32
+include:java-80-cent   include:big-machine java64
+
+
+#### Two demo machines
+
+demo32 include:java-10-cent firewall:demo-group 
+demo64 include:java-80-cent firewall:demo-group 
+
