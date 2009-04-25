@@ -1,5 +1,9 @@
 -*- mode: text; mode: flyspell -*-
 
+WARNING: I'm trying to tease this code out of it's original context, 
+WARNING: removing the prioritary aspects of that.  So while this has
+WARNING: been known to work it is incomplete and broken as it stands.
+
 This directory contains a mechanism for launching EC2 instances.
 
 The idea that kicks this off: have one AMI master AMI for your cluster and then as the instance starts up let it take on a personality.
