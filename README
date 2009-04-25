@@ -1,0 +1,75 @@
+-*- mode: text; mode: flyspell -*-
+
+This directory contains a mechanism for launching EC2 instances.
+
+The idea that kicks this off: have one AMI master AMI for your cluster and then as the instance starts up let it take on a personality.
+
+The personality is seeded by the userdata passed to the instance when it's launced; we call that seed a starter-bundle.  The starter bundles are assembled from modules.  Each machine personality is called a machine type, and these are declared in the file config/machine.types.  In addition to the modules each machine type declares what hardware it uses, what ssh keys to install into it, and how to configure it's firewall groups.
+
+The starter bundles, which might be quite large, are stored on S3.  It's a lot easier to fetch them if they are public, so to keep their contents private we encrypt them.  That has the added benefit of compressing them.
+
+Each stater bundle has a smallish userdata file, a bash script actually, that does pulls, decrypts, unpacks, and runs the start up scripts of the various modules.
+
+Modules are interdependent.  For example you need to initialize apt-get before using it, modules that what to use it declare that they are dependent on the module that does that.  The startup process arranges to run things in the approprate order.
+
+Each module is implemented as a directory containing a start-up.sh script along with what ever else you want packed up into the startup-bundle.  An optional build-me.sh script will be run when the bundle is assembled.
+
+You'll find these directories here.
+  bin -- the scripts for building bundles and running them.
+  config -- configuration files
+  userdata -- The userdata to fire up various bundles we have.
+  modules -- various modules that might be bundled up into
+             your ec2 start-up bundles
+
+The clever bit is that rather than make custom AMI (Amazon Machine Images)
+arrange to have these images customize at start up.  That's not a new idea.
+In fact we use images from <http://alestic.com/> for our AMI.  Those
+images invoke their userdata on start up (after checking that the
+userdata begins with "#!").
+
+Our start up script works as follows.
+ 2. Fetches the start-up bundle from S3
+ 3. Decrypts it
+ 4. Extracts tar file into /tmp, i.e. /tmp/start-up-bundle
+ 5. Starts each module: /tmp/startup_bundle/*/start-up.sh
+These start up scripts are found in the userdata directory.
+
+These tools are found in the bin directory:
+
+ bin/build-startup-bundle.sh <machine-type>
+    This will create a start-up bundle, and
+    user data of <machine-type>.  It stores
+    that bundle on S3.
+ bin/run-instance <machine-type>
+    This will spin up a fresh machine of the
+    type given.
+ bin/delete-start-up-bundle.sh <userdata-file>
+    Deletes a startup bundle.  Takes a user
+    data file and deletes it, as well as it's
+    other portion stored in S3
+ bin/s3
+    A Perl script for interacting with S3
+
+The build script is simple in concept, it packs the modules that
+declared for that machine type, stores it to S3, and creates the
+appropriate userdata. So, different machines include differing sets of
+modules - e.g. Perl tools, the Java kit, rabbitmq, dbj's tools, and
+(of course) your own application.
+
+Things depend on the configuration files:
+
+ config/machine-types 
+    This is where we define <machine-types>.
+    For those machine types it specifies the
+    AMI to use, the hardware to run it on, the
+    firewall groups, to configure for it, and
+    of course modules to include.
+ config/ec2.config
+    This is where we configure what misc.
+    details about how we interact with EC2
+
+Note that module start-up.sh scripts tend to be
+quite stylized.  The details of that are documented
+in modules/README.
+
+ LocalWords:  config userdata startup ec2 LocalWords flyspell
