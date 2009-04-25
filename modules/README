@@ -1,0 +1,52 @@
+This directory contains a set of modules that maybe included
+in a start-up bundle.  Each module is a directory, and that
+entire directory branch will be bundled up.  The start-up.sh
+script in that directory (if any) is run on start up.
+
+These start-up.sh scripts tend to be quite stylized.  Here's one.
+
+  % cat modules/erlang/start-up.sh
+  #!/bin/bash
+  . ../utilities/include-for-start-up.sh
+  begin_start_up erlang
+  require bootstrap-apt
+  apt-get --yes --force-yes  install erlang
+  end_start_up erlang
+
+Things to notice.  
+ - It must be a bash script.  
+ - It must include the utilties.  
+ - It must have that begin/end bracketing.
+ - The module name used on the begin/end must match the directory name.
+ - It must declare (via require) other modules which should
+   be installed before it runs.
+ - by convention module names use dash-spelling, not
+   under_score or camelCase.
+
+Here, for example, we require bootstrap-apt becaue
+
+There are a number of useful routines in the included file, have a peek.
+
+Absent the required orderings modules are started up in
+alphabetical order.
+
+When debugging these scripts you'll want to know:
+ - Their output appears in /var/log/messages
+ - /tmp/start-up-flags has the flags that preempt
+   starting a module multiple times.  So delete that if
+   you want to run it again.
+
+Some modules are suitable for sharing with others, while
+some modules are propretary.  There are two points to make
+about how to address that.  First off put all your modules
+in their own modules directory and add that to the module_path
+specified in the config/config.ec2.
+
+Secondly many modules will have two parts.  The part that
+installs the software and a second part that configure the
+software.  The part typically has the secrets, such as what
+port number you database listens on, or the ssh keys you
+use for intra-cluster communications.  So take the time to
+tease the configuration seperately.
+
+TBD: explain installing java as an example
