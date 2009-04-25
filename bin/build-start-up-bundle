@@ -1,0 +1,130 @@
+#!/bin/bash
+. `dirname $0`/common-startup.sh
+
+usage(){
+    cat <<EOF
+Usage: $0 <machine-type>
+   Create a bundle for the <machine-type>, these are
+   are defined in the machine-types file.
+   The resulting bundle is moved to s3 in the folder
+   given by the starters line in the config file.
+   The file is encrypted with the password given there.
+   Note you must take note of the actual bundle name
+   which includes a date stamp.
+EOF
+    exit 1
+}
+
+SCRIPTHOME=`pwd`
+
+# Exit if any simple commands exit with non-zero status
+set -e
+
+MDIRS=`get-config modules_path`
+
+find_module(){
+    MNAME=$1
+    for MDIR in $MDIRS ; do
+        if [ -d $MDIR/$MNAME ] ; then
+            echo $MDIR/$MNAME
+            return 0
+        fi
+    done
+    ERROR "Unable to find module: $MNAME in $MDIRS"
+}
+
+# Check that we are running in the right directory.
+[ -e $SCRIPTHOME/modules ] || ERROR "Must $0 run in the right place."
+
+NAME=$1
+AMI=unknown
+FIREWALL_GROUP=unknown
+HARDWARE=unknown
+MODULES=()
+# Get the name for our bundle
+snip(){
+    echo $1 | sed 's/.*://'
+}
+process_name(){
+    COMPONENT=$1
+    grep --quiet "^$COMPONENT " config/machine-types || ERROR "Unknown $NAME not found machine-types"
+    INFO=( `grep "^$COMPONENT " config/machine-types` )
+    INFO=(${INFO[@]:1})
+    for part in ${INFO[@]} ; do
+        case $part in
+            include:*) process_name $part;;
+            ami:*) AMI=`snip $part`;;
+            hardware:*) HARDWARE=`snip $part`;;
+            firewall:*) FIREWALL_GROUP=`snip $part`;;
+            *) MODULES=( ${MODULES[@]} $part) ;;
+        esac
+    done
+}
+process_name $NAME
+LOG "Building $NAME, ami: $AMI, firewall_group: $FIREWALL_GROUP, hardware: $HARDWARE with modules..."
+LOG "  ${MODULES[@]}"
+
+STAGING=/tmp/$$/start-up-bundle
+mkdir -p $STAGING
+for module in ${MODULES[@]} ; do 
+    MODULE_DIR=`find_module $module`
+    if [ -e $MODULE_DIR/start-up.sh ] ; then
+        if [ ! -x $MODULE_DIR/start-up.sh ] ; then
+            ERROR "Must be executable: $MODULE_DIR/start-up.sh"
+        fi
+    fi
+    if [ -e $MODULE_DIR/build-me.sh ] ; then
+        LOG Running modules/$module/build-me.sh
+        (cd $MODULE_DIR ; ./build-me.sh ) || ERROR $MODULE_DIR/build-me.sh
+    fi
+    cp -rp $MODULE_DIR /tmp/$$/start-up-bundle
+done
+
+find /tmp/$$/start-up-bundle -name .svn | xargs rm -r
+
+BUNDLE=$NAME-`date '+%Y%m%d%H'`
+STORE=`get-config starters`/$BUNDLE
+
+LOG Packing into $BUNDLE
+PASSWORD=`get-config password`
+tar --directory $STAGING/.. --create start-up-bundle | openssl enc -aes-256-cbc -k "$PASSWORD" > /tmp/$BUNDLE
+INFO=( `BLOCKSIZE=1048576 ls -s /tmp/$BUNDLE` )
+LOG "Moving ${INFO[0]}Mb $BUNDLE to $STORE"
+EC2ID=`get-config ec2_id`
+EC2SECRET=`get-config ec2_secret`
+s3(){
+    $SCRIPTHOME/bin/s3 --id $EC2ID --secret $EC2SECRET $*
+}
+s3 cp /tmp/$BUNDLE `get-config starters`/$BUNDLE
+s3 acl $STORE --add any:read
+
+
+LOG Creating userdata file: userdata/$BUNDLE
+URL=`get-config urlbase`/$BUNDLE
+sed -e "s%@@@URL@@@%$URL%" \
+    -e "s/@@@PASSWORD@@@/$PASSWORD/" \
+    -e "s/@@@TYPE@@@/$NAME/" \
+    > userdata/$BUNDLE <<'EOF'
+#!/bin/bash
+trap 'echo ERROR(userdata): Bootstrapping failed; exit 1' ERR
+cat <<EOM >> /etc/profile
+MACHINE_TYPE=@@@TYPE@@@
+MACHINE_ID="M.@@@TYPE@@@.`curl -s http://instance-data.ec2.internal/latest/meta-data/instance-id`"
+export MACHINE_TYPE
+export MACHINE_ID
+EOM
+. /etc/profile
+echo "LOG(userdata): Bootstrapping $MACHINE_ID from <@@@URL@@@>"
+set -o pipefail
+cd /tmp
+curl -s "@@@URL@@@" | openssl enc -d -aes-256-cbc -k @@@PASSWORD@@@ | tar x
+echo "LOG(userdata): Unpacked: `find start-up-bundle | wc -l` files"
+cd start-up-bundle
+echo "LOG(userdata): Run start-up scripts for various modules"
+for i in */start-up.sh ; do
+  MODULE=`dirname $i`
+  echo "LOG(userdata): Starting module $MODULE: via $i"
+  (cd $MODULE; bash start-up.sh)
+  echo "LOG(userdata): Finished starting module $MODULE"
+done
+EOF
