@@ -1,0 +1,18 @@
+Recalling that each starter bundle consists of two parts:
+
+ - The large encrypted file stored in EC2, and
+ - The small bash script passed as user data to start that bundle.
+
+the second parts are all stored here.  
+
+Effectively the contents of this directory act to provide our database, or
+bank of known starter-bundles.  The scripts in the bin directory are then
+used to manage this collection.  Building and deleting them, spinning
+up instances from them.
+
+We do not check these into source control; so the .gitignore file of this directory is a bit unsual it reads:
+
+   *
+   !README
+
+Each starter bundle is denoted by a name consisting of the machine type and a date stamp concatenated together.
