@@ -38,7 +38,7 @@ LOG "Check machine-types"
 [ -f config/machine-types ] || trouble "Create config/machine-types, see config/machine-types.example."
 
 LOG "Check firewall groups"
-for group in `grep -o 'firewall:[a-z][a-z_0-9]*' config/machine-types | sort | uniq | sed 's/firewall://'` ; do
+for group in `grep -o 'firewall:[a-z][-a-z_0-9]*' config/machine-types | sort | uniq | sed 's/firewall://'` ; do
   ec2-describe-keypairs $group || trouble "Group '$group' needs to be setup."
 done
 
