@@ -17,12 +17,15 @@
 include:basic-modules  utilities bootstrap-apt erlang
 include:little-machine ami:ami-115db978 hardware:m1.small
 include:big-machine    ami:ami-055db96c hardware:m1.small
-include:java-10-cent   include:little-machine java32
-include:java-80-cent   include:big-machine java64
-
 
 #### Two demo machines
 
-demo32 include:java-10-cent firewall:demo-group 
-demo64 include:java-80-cent firewall:demo-group 
+demo include:little-machine firewall:demo-group
+
+#### TBD: java example
+
+#include:java-10-cent   include:little-machine java32
+#include:java-80-cent   include:big-machine java64
+#demo32 include:java-10-cent firewall:demo-group 
+#demo64 include:java-80-cent firewall:demo-group 
 
