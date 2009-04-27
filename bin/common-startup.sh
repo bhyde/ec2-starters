@@ -36,6 +36,11 @@ get-config(){
 [ -d config ] || ERROR "Script must run the ec2-starter directory"
 [ -f config/ec2.config ] || ERROR "missing config/ec2.config, see README"
 
+s3cmd(){
+  # odd following odd use of which preempts recursion
+  `which s3cmd` --config=$HERE/config/.s3cmd $*
+}
+
 make_s3cmd(){
   ACCESS_KEY=`get-config ec2_id`
   SECRET_KEY=`get-config ec2_secret`
@@ -70,12 +75,8 @@ verbosity = WARNING
 EOF
 }
 
-EC2ID=`get-config ec2_id`
-EC2SECRET=`get-config ec2_secret`
-s3cmd(){
-    `dirname $0`/s3cmd --config=$HERE/config/.s3cmd $*
-#     $HERE/bin/s3 --id $EC2ID --secret $EC2SECRET $*
-}
 
 [ -f config/.s3cmd ] || make_s3cmd
 [ config/ec2.config -nt config/.s3cmd ] && make_s3cmd
+export EC2_CERT=`get-config cert-pem-file`
+export EC2_PRIVATE_KEY=`get-config pk-pem-file`
