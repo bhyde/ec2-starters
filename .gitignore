@@ -1,2 +1,6 @@
+# Ignore the emacs backup and lock files
 *~
-#*
+
+# Note that we don't ignore emacs lock files
+# i.e.  "#foo.c"  since commiting when they
+# are alive is usually a mistake
