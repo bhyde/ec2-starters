@@ -16,7 +16,8 @@ error_exit(){
 }
 trap error_exit ERR
 
-HERE=`(cd dirname $0; cd ..; pwd)`
+HERE=`dirname $0`
+HERE=`(cd $HERE/..; pwd)`
 
 LOG(){
   echo_stderr "LOG: $*"
@@ -73,7 +74,7 @@ EC2ID=`get-config ec2_id`
 EC2SECRET=`get-config ec2_secret`
 s3cmd(){
     `dirname $0`/s3cmd --config=$HERE/config/.s3cmd $*
-;    $HERE/bin/s3 --id $EC2ID --secret $EC2SECRET $*
+#     $HERE/bin/s3 --id $EC2ID --secret $EC2SECRET $*
 }
 
 [ -f config/.s3cmd ] || make_s3cmd

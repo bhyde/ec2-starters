@@ -1,5 +1,6 @@
 # These files, particularly the first, have private
 # data in them; so we want to keep them out of the
 # public repository
-config.ec2
+ec2.config
 machine-types
+.s3cmd
