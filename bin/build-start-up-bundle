@@ -61,8 +61,11 @@ process_name(){
     done
 }
 process_name $NAME
-LOG "Building $NAME, ami: $AMI, firewall_group: $FIREWALL_GROUP, hardware: $HARDWARE with modules..."
-LOG "  ${MODULES[@]}"
+LOG "Building $NAME"
+LOG "  ami: $AMI"
+LOG "  firewall_group: $FIREWALL_GROUP"
+LOG "  hardware: $HARDWARE"
+LOG "  modules: ${MODULES[@]}"
 
 STAGING=/tmp/$$/start-up-bundle
 mkdir -p $STAGING
@@ -90,13 +93,7 @@ PASSWORD=`get-config password`
 tar --directory $STAGING/.. --create start-up-bundle | openssl enc -aes-256-cbc -k "$PASSWORD" > /tmp/$BUNDLE
 INFO=( `BLOCKSIZE=1048576 ls -s /tmp/$BUNDLE` )
 LOG "Moving ${INFO[0]}Mb $BUNDLE to $STORE"
-EC2ID=`get-config ec2_id`
-EC2SECRET=`get-config ec2_secret`
-s3(){
-    $SCRIPTHOME/bin/s3 --id $EC2ID --secret $EC2SECRET $*
-}
-s3 cp /tmp/$BUNDLE `get-config starters`/$BUNDLE
-s3 acl $STORE --add any:read
+s3cmd --acl-private put /tmp/$BUNDLE `get-config starter_bucket`/$BUNDLE
 
 
 LOG Creating userdata file: userdata/$BUNDLE
