@@ -14,13 +14,13 @@
 
 #### Building blocks
 
-include:basic-modules  utilities bootstrap-apt erlang
+include:basic-modules  utilities bootstrap-apt
 include:little-machine ami:ami-115db978 hardware:m1.small
 include:big-machine    ami:ami-055db96c hardware:m1.small
 
 #### Two demo machines
 
-demo include:little-machine firewall:demo-group
+demo include:little-machine include:basic-modules erlang firewall:demo-group
 
 #### TBD: java example
 
