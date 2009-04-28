@@ -22,17 +22,22 @@ You will need to have your environment set up approprately.  This
 can be tedious, but well worth it.
 
 Things you'll need or must be setup.
- - An EC2 account including four of credentials they use
+ - An EC2 account[1] including four of credentials they use
  - A S3 bucket where you'll store your starter bundles
- - The Amazon unix tools, i.e. ec2-run-instances, etc. etc.
+ - The Amazon unix tools[2], i.e. ec2-run-instances, etc. etc.
  - A Unix tool chain include: bash, python, perl, awk, sed, grep
  - openssl
- - the python s3 tool s3cmd
- - at least one ec2 firewall group[1]
- - register at least one master ssh key with ec2, which it can
+ - the python s3 tool s3cmd[3]
+ - register at least one master ssh key[4] with ec2, which it can
    install into instances you run.  You have to give this key
    and ID, a good naming conventions is, by example, foo-master-key;
    for your application foo.
+
+[1] http://aws.amazon.com/ec2/
+[2] http://developer.amazonwebservices.com/connect/entry.jspa?externalID=351
+[3] http://s3tools.org/s3cmd
+[4] http://docs.amazonwebservices.com/AWSEC2/2008-02-01/DeveloperGuide/index.html?CLTRG-add-keypair.html
+
 
 === Configuration ===
  
