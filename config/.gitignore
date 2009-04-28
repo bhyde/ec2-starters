@@ -3,4 +3,5 @@
 # public repository
 ec2.config
 machine-types
+trusted-ips
 .s3cmd
