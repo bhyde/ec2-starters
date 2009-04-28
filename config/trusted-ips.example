@@ -1,0 +1,9 @@
+# These are ip addresses we would like to 
+# enable access from thru our firewalls.
+
+# The office
+208.77.188.166
+
+# Bob's machine at home
+208.77.188.166
+

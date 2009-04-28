@@ -1,0 +1,27 @@
+#!/bin/bash
+. `dirname $0`/common-startup.sh
+
+trap 'echo "ERROR($0): Interupted" ; exit 1' INT
+GROUP=$1
+DESCRIPTION=$2
+TRUSTED=`get-config file_of_trusted_ips`
+[ 'x' == "x$TRUSTED" ] && ERROR "No config set for file_of_trusted_ips"
+[ -f $TRUSTED ] || ERROR "No file of trusted ips '$TRUSTED'"
+LOG Check if $GROUP already exists
+if ec2-describe-group $GROUP 2>&1 | grep --quiet 'does not exist' ; then 
+  LOG Creating $GROUP
+  ec2-add-group $GROUP "--description= $DESCRIPTION"
+else 
+  LOG Updating $GROUP, adding auths
+fi
+LOG Auth ping from everybody
+ec2-authorize $GROUP -P icmp -t -1:-1
+LOG Auth SSH, AMQP, and HTTP from Trusted IPs
+for TRUSTED in `grep '^[0-9.][0-9.]* *$' $TRUSTED` ; do
+  LOG for $TRUSTED
+  ec2-authorize $GROUP -P tcp -p 22 -s $TRUSTED/32
+  ec2-authorize $GROUP -P tcp -p 5672 -s $TRUSTED/32
+  ec2-authorize $GROUP -P tcp -p 80 -s $TRUSTED/32
+done
+LOG Finally Describe
+ec2-describe-group $GROUP
