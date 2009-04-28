@@ -1,0 +1,104 @@
+=== Table of Contents ===
+
+ * Downloading
+ * Requirements
+ * Configuration
+ * Firewall Groups
+ * Building start up bundles
+ * Spinning up Instances
+ * Managing Your Instances
+ * Wrapping Up
+
+=== Downloading ===
+
+To assure you can track improvements and contribute yours back please
+use git to obtain your copy.
+
+   git clone git://github.com/bhyde/ec2-starters.git
+
+=== Requirements ===
+
+You will need to have your environment set up approprately.  This
+can be tedious, but well worth it.
+
+Things you'll need or must be setup.
+ - An EC2 account including four of credentials they use
+ - A S3 bucket where you'll store your starter bundles
+ - The Amazon unix tools, i.e. ec2-run-instances, etc. etc.
+ - A Unix tool chain include: bash, python, perl, awk, sed, grep
+ - openssl
+ - the python s3 tool s3cmd
+ - at least one ec2 firewall group[1]
+ - register at least one master ssh key with ec2, which it can
+   install into instances you run.  You have to give this key
+   and ID, a good naming conventions is, by example, foo-master-key;
+   for your application foo.
+
+=== Configuration ===
+ 
+Once you have all the above, then setup your configuration files.
+Copy the examples, and edit them.  You don't need to edit the
+machine-types file immediately.
+ 
+   config/ec2.config.example -edit-> config/ec2.config 
+   config/machine-types.example -edit-> config/machine-types
+   config/trusted-ips.example -edit-> config/trusted-ips
+
+In ec2.config change everyplace the word "example" appears.
+Also drop the bit were it says "app1 app2" from the modules_path.
+Later, when you start your own application, called say foo,
+add a new subdirectory foo and add "foo" to the modules_path.
+
+There is a lot of private info in config/ec2.config, so you will
+want to set it's access bits approprately, for example:
+
+   chmod or-rw config/ec2.config
+
+You can check if your ready to go using the command
+
+    bin/validate-configuration
+
+=== Firewall Groups ===
+
+It will almost certainly fail the first few times you try.
+In particular you need to setup a firewall group, the one
+configured the example machine-types is called demo-group.
+We have a script to help set that up:
+
+    bin/make-standard-firewall-group demo-group 'For the first demonstration.'
+
+=== Building start up bundles ===
+
+Once you've beat'n your configuration into submission then
+you can create your first starter-bundle.
+
+    bin/build-start-up-bundle demo
+
+
+=== Spinning up Instances ===
+
+And then you can spin up an instance of that
+
+    bin/run-instance demo
+
+=== Managing Your Instances ===
+
+You can enumerate the things you have running using
+
+    ec2-describe-instances
+
+or
+
+   bin/simple-describe-instances
+
+The latter is useful when writing shell scripts.
+
+=== Wrapping Up ===
+
+Of course you murder your instances using
+
+   ec2-terminate-instance
+
+or the instance can commit sucide by vai "halt -p", just
+don't do that on your own machine by mistake.
+  bin/build-start-up-bundle.sh demo
