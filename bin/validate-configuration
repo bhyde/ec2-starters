@@ -15,6 +15,9 @@ if [ $SNAP != 'ah' ] ; then
   fi
 fi
 
+LOG "Has config/ec2.config has been setup"
+grep -i example config/ec2.config && trouble "config/ec2.config doesn't look right"
+
 LOG First check that various commands are in our search path.
 for cmd in s3cmd openssl sed awk ; do
   LOG "  $cmd : `which $cmd`"
