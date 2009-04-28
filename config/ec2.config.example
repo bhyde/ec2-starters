@@ -19,3 +19,6 @@ ssh_key_name example_key
 
 # Where to search for the modules we assemble starter bundles
 modules_path modules example-app
+
+# File enumerating IP addresses we trust
+file_of_trusted_ips config/EXAMPLE-trusted-ips
