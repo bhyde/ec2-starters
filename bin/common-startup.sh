@@ -10,11 +10,10 @@ cleanup(){
 }
 trap cleanup EXIT
 
-error_exit(){
-  cleanup
-  echo_stderr 'Exiting on error'
+log_error(){
+  echo_stderr 'WARN: last command had nonzero exit'
 }
-trap error_exit ERR
+trap log_error ERR
 
 HERE=`dirname $0`
 HERE=`(cd $HERE/..; pwd)`
