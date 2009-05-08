@@ -1,0 +1,5 @@
+# rabbitmq-config.sh file will have private data in it, so
+# users do not want it put into often public
+# repositories.
+
+rabbitmq-config.sh

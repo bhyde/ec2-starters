@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Note: You must modify every occurance of the token EXAMPLE, including that one!
+
+# more complex configurations can of course be created by
+# further tinkering.
+
+ERLANG_COOKIE=EXAMPLE_35e5497b62d48e726298bb9e4b1edbce
+USER=EXAMPLE_user
+PASSWORD=EXAMPLE_password
+VHOST=/example_vhost
+
+echo $ERLANG_COOKIE > /var/lib/rabbitmq/.erlang.cookie
+cp /var/lib/rabbitmq/.erlang.cookie /root/.erlang.cookie
+chmod 400 /var/lib/rabbitmq/.erlang.cookie /root/.erlang.cookie
+invoke-rc.d rabbitmq-server start
+rabbitmqctl delete_user guest
+rabbitmqctl add_user $USER $PASSWORD
+rabbitmqctl add_vhost "$VHOST"
+rabbitmqctl map_user_vhost $USER '$VHOST'
+rabbitmqctl status

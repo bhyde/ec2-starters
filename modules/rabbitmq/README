@@ -1,0 +1,15 @@
+RabbitMQ[1]is an implementation of the AMQP protocol in Erlang.
+
+To add this to your instance include erlang and this in your
+machine type, i.e.: erlang rabbitmq.
+
+Then copy rabbitmq-config.sh-example over to rabbitmq-config.sh
+and edit it configure
+ - the erlang cookie you want all your erlang instances to use.
+ - at least one user/password and one vhost.
+
+That will give you a very simple single node setup, and if you
+don't fiddle too much with the config then you will have only
+one user and one vhost.
+
+[1] http://www.rabbitmq.com/
